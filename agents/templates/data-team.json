@@ -1,0 +1,59 @@
+{
+  "name": "Data team",
+  "description": "Team focused on data processing and security: a data engineer and a security analyst.",
+  "agents": [
+    {
+      "id": "DATA_ENGINEER",
+      "name": "Data Engineer",
+      "role": "Data Engineer",
+      "role_base": "BACKEND_DEV",
+      "description": "Data model, ETL / migration scripts, reporting queries and data validation tests",
+      "capabilities": [
+        "SCAFFOLD",
+        "FEATURE",
+        "BUG",
+        "IMPROVEMENT",
+        "REFACTOR"
+      ],
+      "focus": [
+        "data",
+        "etl",
+        "report",
+        "analytics",
+        "database",
+        "migration"
+      ],
+      "profile": {
+        "effort": "medium"
+      }
+    },
+    {
+      "id": "SECURITY_ANALYST",
+      "name": "Security Analyst",
+      "role": "Security Analyst",
+      "role_base": "QA",
+      "description": "Authorization, input validation and dependency security; security test scenarios",
+      "capabilities": [
+        "TEST",
+        "BUG",
+        "REVIEW"
+      ],
+      "focus": [
+        "security",
+        "authorization",
+        "authentication",
+        "password",
+        "token",
+        "xss",
+        "sql injection"
+      ],
+      "profile": {
+        "effort": "high"
+      },
+      "evaluates": [
+        "BACKEND_DEV",
+        "FRONTEND_DEV"
+      ]
+    }
+  ]
+}

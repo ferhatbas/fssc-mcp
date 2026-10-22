@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root[data-theme="light"], [data-theme="light"] {
+  --bg:#f3f2ee; --grid:#dedbd2;
+  --panel:#ffffff; --panel2:#faf9f5; --sunk:#edebe4;
+  --line:#e3e0d7; --line2:#d5d1c6;
+  --ink:#1c1f26; --ink2:#434a57; --ink3:#5e6675;
+  --ok:#1f7a55; --okd:#e3f3ea; --warn:#7d5309; --warnd:#f8eed6;
+  --err:#ac2540; --errd:#fbe6e8; --info:#1d6ba6; --infod:#e2eefa;
+  --ac:#3a48cc; --acd:#e9ebfd; --onac:#ffffff;
+  --shadow:0 1px 2px rgba(40,38,30,.06), 0 10px 24px -14px rgba(40,38,30,.25);
+  /* ofis sahnesi */
+  --flr:#eceae5; --flr2:#e3e0d8; --wall:#f7f6f2; --desk:#d7d3ca; --desk2:#c3bdb1;
+  --chair:#98a1b0; --scr:#1d2430; --bez:#3a4250; --kbd:#b9c0cb; --board:#fbfaf7; --frame:#cfcabd;
+}
+
+[data-theme="dark"] {
+  --bg:#191c23; --grid:#2b313c;
+  --panel:#21262f; --panel2:#262c37; --sunk:#171a21;
+  --line:#333a47; --line2:#3c4452;
+  --ink:#eef1f7; --ink2:#b6bfcd; --ink3:#98a2b1;
+  --ok:#4fbe89; --okd:#163227; --warn:#e0a83c; --warnd:#35290f;
+  --err:#ea6275; --errd:#37161c; --info:#59a9e8; --infod:#12283a;
+  --ac:#8e9bfb; --acd:#1e2350; --onac:#15181f;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  --flr:#232935; --flr2:#1e232d; --wall:#2b313d; --desk:#3a4150; --desk2:#2d3340;
+  --chair:#4b5563; --scr:#0f151d; --bez:#1b212b; --kbd:#5b6470; --board:#323947; --frame:#262c38;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom scrollbar matching tokens */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--sunk);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink3);
+}
+
+/* React Flow custom background and edges */
+.react-flow__background {
+  background-color: var(--panel) !important;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2.5px;
+  stroke: var(--ac);
+}
+
+/* Glowing animation for active edge */
+@keyframes flowDash {
+  to {
+    stroke-dashoffset: -30;
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.animated-edge {
+  stroke-dasharray: 6, 6;
+  animation: flowDash 0.8s linear infinite;
+}
+
+.bug-edge {
+  stroke: var(--err) !important;
+  stroke-dasharray: 8, 4;
+  animation: flowDash 0.5s linear infinite;
+  filter: drop-shadow(0 0 6px var(--err));
+}
+
+.success-edge {
+  stroke: var(--ok) !important;
+  stroke-dasharray: 6, 6;
+  animation: flowDash 0.8s linear infinite;
+  filter: drop-shadow(0 0 6px var(--ok));
+}
+
+/* Baloncuk ve Popup için sınırlı (3 defa) zıplama animasyonu */
+@keyframes bounce3 {
+  0%, 100% {
+    transform: translate(-50%, 0);
+  }
+  20%, 60% {
+    transform: translate(-50%, -10px);
+  }
+  40%, 80% {
+    transform: translate(-50%, 0);
+  }
+}
+
+.animate-bounce-3 {
+  animation: bounce3 1.8s cubic-bezier(0.28, 0.84, 0.42, 1) 1 forwards;
+}
+
+
+/* Alternatif accent'ler (UYGULAMA_TALIMATI §2): data-accent="teal" | "magenta" */
+[data-accent="teal"] { --ac: #0f6f67; --acd: #e1f4f1; }
+[data-accent="teal"][data-theme="dark"] { --ac: #4cc9bc; --acd: #10312e; }
+[data-accent="magenta"] { --ac: #98266a; --acd: #fae6f1; }
+[data-accent="magenta"][data-theme="dark"] { --ac: #e37cb4; --acd: #3a1430; }
+
+/* ---------------------------------------------------------------------------
+   Tema tamamlama (D4): tarayıcı form kontrolleri, kaydırma çubukları, React Flow kromu
+   --------------------------------------------------------------------------- */
+:root { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+select, option, input[type="text"], input[type="search"], input[type="url"], input[type="password"], input[type="number"], textarea {
+  background-color: var(--sunk);
+  color: var(--ink);
+  border-color: var(--line);
+}
+option { background-color: var(--panel); }
+input::placeholder, textarea::placeholder { color: var(--ink3); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--line2) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+.react-flow__controls { box-shadow: var(--shadow); }
+.react-flow__controls button {
+  background: var(--panel) !important;
+  border-bottom: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+  fill: var(--ink) !important;
+}
+.react-flow__controls button:hover { background: var(--panel2) !important; }
+.react-flow__minimap { background: var(--panel) !important; }
+.react-flow__attribution { background: transparent !important; color: var(--ink3) !important; font-size: 9px; }
+.react-flow__attribution a { color: var(--ink3) !important; }
+.react-flow__node { transition: transform .6s ease; }
+.react-flow__node.dragging { transition: none; }
+
+
+/* Şerit/rozet ile maddeye gidince kısa süreli vurgu */
+@keyframes fsscFlash {
+  0%   { box-shadow: 0 0 0 3px rgb(var(--fssc-flash, 245 180 84) / 0.95); background-color: rgb(var(--fssc-flash, 245 180 84) / 0.28); }
+  70%  { box-shadow: 0 0 0 3px rgb(var(--fssc-flash, 245 180 84) / 0.55); background-color: rgb(var(--fssc-flash, 245 180 84) / 0.16); }
+  100% { box-shadow: 0 0 0 3px rgb(var(--fssc-flash, 245 180 84) / 0); background-color: transparent; }
+}
+.fssc-flash { animation: fsscFlash 2.4s ease-out; border-radius: 10px; }

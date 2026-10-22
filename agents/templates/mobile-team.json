@@ -1,0 +1,49 @@
+{
+  "name": "Mobile team",
+  "description": "Team that builds mobile apps: a mobile developer (Flutter / React Native / Android / iOS) and a mobile test engineer.",
+  "agents": [
+    {
+      "id": "MOBILE_DEV",
+      "name": "Mobile Developer",
+      "role": "Mobile Developer",
+      "role_base": "FRONTEND_DEV",
+      "description": "Flutter / React Native / Android / iOS app screens, device APIs and mobile tests",
+      "capabilities": [
+        "SCAFFOLD",
+        "FEATURE",
+        "BUG",
+        "IMPROVEMENT",
+        "REFACTOR"
+      ],
+      "focus": [
+        "mobile",
+        "android",
+        "ios",
+        "flutter",
+        "react native",
+        "phone"
+      ],
+      "profile": {
+        "effort": "medium",
+        "language": "en"
+      }
+    },
+    {
+      "id": "MOBILE_QA",
+      "name": "Mobile QA Engineer",
+      "role": "Mobile QA",
+      "role_base": "QA",
+      "description": "Mobile screen flows, device / screen-size compatibility and mobile e2e scenarios",
+      "capabilities": [
+        "TEST",
+        "E2E_SCENARIO",
+        "BUG"
+      ],
+      "focus": [
+        "mobile test",
+        "device",
+        "emulator"
+      ]
+    }
+  ]
+}

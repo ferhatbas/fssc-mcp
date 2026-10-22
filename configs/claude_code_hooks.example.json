@@ -1,0 +1,47 @@
+{
+  "_comment": "Claude Code hooks: add them to .claude/settings.json in the FS-SC repository root (or to ~/.claude/settings.json). Every event is forwarded to the server (/api/claude/hook) by scripts/claude_hook.py; the server starts following the transcript and writes the calls to a two-way log.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/claude_hook.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__fssc-visual-observer__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/claude_hook.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__fssc-visual-observer__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/claude_hook.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/claude_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

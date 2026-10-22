@@ -1,0 +1,565 @@
+{
+  "source": {
+    "site": "https://aitmpl.com/skills/",
+    "repo": "https://github.com/davila7/claude-code-templates",
+    "raw_base": "https://raw.githubusercontent.com/davila7/claude-code-templates/main/cli-tool/components/skills/",
+    "note": "Skill contents belong to the authors of the repository; FS-SC only references them and downloads the content into a local cache (the source link is shown in the interface)."
+  },
+  "skills": [
+    {
+      "id": "backend-dev-guidelines",
+      "category": "development",
+      "title": "Backend development guide",
+      "summary": "Layered backend (controller/service/repository), error handling, validation and testing patterns.",
+      "roles": [
+        "BACKEND_DEV",
+        "ARCHITECT"
+      ],
+      "default_roles": [
+        "BACKEND_DEV"
+      ]
+    },
+    {
+      "id": "api-design-principles",
+      "category": "development",
+      "title": "API design principles",
+      "summary": "REST/GraphQL API design: resource naming, versioning, error bodies, pagination.",
+      "roles": [
+        "BACKEND_DEV",
+        "ARCHITECT"
+      ],
+      "default_roles": [
+        "BACKEND_DEV",
+        "ARCHITECT"
+      ]
+    },
+    {
+      "id": "clean-code",
+      "category": "development",
+      "title": "Clean code",
+      "summary": "Pragmatic code standards: simple, direct, no over-engineering and no needless comments.",
+      "roles": [
+        "BACKEND_DEV",
+        "FRONTEND_DEV",
+        "DEVOPS",
+        "CODE_REVIEWER"
+      ],
+      "default_roles": [
+        "BACKEND_DEV",
+        "CODE_REVIEWER"
+      ]
+    },
+    {
+      "id": "api-patterns",
+      "category": "development",
+      "title": "API patterns",
+      "summary": "Common API patterns and a decision guide.",
+      "roles": [
+        "BACKEND_DEV",
+        "ARCHITECT"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "database-design",
+      "category": "development",
+      "title": "Database design",
+      "summary": "Schema, index, normalization and migration patterns.",
+      "roles": [
+        "BACKEND_DEV",
+        "ARCHITECT"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "domain-driven-design",
+      "category": "development",
+      "title": "Domain-driven design",
+      "summary": "Bounded contexts, entities/value objects and domain services.",
+      "roles": [
+        "ARCHITECT",
+        "BACKEND_DEV"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "architecture-decision-records",
+      "category": "development",
+      "title": "Architecture decision records (ADR)",
+      "summary": "Documenting decisions with reasoned, one-page records.",
+      "roles": [
+        "ARCHITECT"
+      ],
+      "default_roles": [
+        "ARCHITECT"
+      ]
+    },
+    {
+      "id": "architecture-patterns",
+      "category": "development",
+      "title": "Architecture patterns",
+      "summary": "Layered/hexagonal/clean architecture and module boundaries.",
+      "roles": [
+        "ARCHITECT",
+        "BACKEND_DEV"
+      ],
+      "default_roles": [
+        "ARCHITECT"
+      ]
+    },
+    {
+      "id": "frontend-dev-guidelines",
+      "category": "development",
+      "title": "Frontend development guide",
+      "summary": "Component structure, state management, data fetching and testing patterns.",
+      "roles": [
+        "FRONTEND_DEV"
+      ],
+      "default_roles": [
+        "FRONTEND_DEV"
+      ]
+    },
+    {
+      "id": "accessibility",
+      "category": "development",
+      "title": "Accessibility",
+      "summary": "WCAG-oriented accessible interface rules (keyboard, ARIA, contrast).",
+      "roles": [
+        "FRONTEND_DEV",
+        "DESIGNER",
+        "QA"
+      ],
+      "default_roles": [
+        "FRONTEND_DEV"
+      ]
+    },
+    {
+      "id": "core-web-vitals",
+      "category": "development",
+      "title": "Core Web Vitals",
+      "summary": "Loading / interaction / visual-stability performance.",
+      "roles": [
+        "FRONTEND_DEV",
+        "SEO_OPTIMIZER"
+      ],
+      "default_roles": [
+        "SEO_OPTIMIZER"
+      ]
+    },
+    {
+      "id": "design-system-starter",
+      "category": "development",
+      "title": "Design system starter",
+      "summary": "Guide to setting up design tokens and a component library.",
+      "roles": [
+        "DESIGNER",
+        "FRONTEND_DEV"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "e2e-testing-patterns",
+      "category": "development",
+      "title": "E2E testing patterns",
+      "summary": "Writing stable end-to-end tests with Playwright/Cypress.",
+      "roles": [
+        "QA"
+      ],
+      "default_roles": [
+        "QA"
+      ]
+    },
+    {
+      "id": "code-review-checklist",
+      "category": "development",
+      "title": "Code review checklist",
+      "summary": "Checking correctness, security, performance and readability.",
+      "roles": [
+        "QA",
+        "ARCHITECT",
+        "CODE_REVIEWER"
+      ],
+      "default_roles": [
+        "QA",
+        "CODE_REVIEWER"
+      ]
+    },
+    {
+      "id": "docker-expert",
+      "category": "development",
+      "title": "Docker expert",
+      "summary": "Multi-stage builds, image optimization, compose and security.",
+      "roles": [
+        "DEVOPS"
+      ],
+      "default_roles": [
+        "DEVOPS"
+      ]
+    },
+    {
+      "id": "github-actions-creator",
+      "category": "development",
+      "title": "GitHub Actions",
+      "summary": "Setting up CI workflows and caching patterns.",
+      "roles": [
+        "DEVOPS"
+      ],
+      "default_roles": [
+        "DEVOPS"
+      ]
+    },
+    {
+      "id": "deployment-procedures",
+      "category": "development",
+      "title": "Deployment procedures",
+      "summary": "Safe deployment, rollback and environment management.",
+      "roles": [
+        "DEVOPS"
+      ],
+      "default_roles": [
+        "DEVOPS"
+      ]
+    },
+    {
+      "id": "api-documentation-generator",
+      "category": "development",
+      "title": "API documentation",
+      "summary": "Generating readable API documentation from endpoints.",
+      "roles": [
+        "DOCUMENTOR",
+        "BACKEND_DEV"
+      ],
+      "default_roles": [
+        "DOCUMENTOR"
+      ]
+    },
+    {
+      "id": "changelog-generator",
+      "category": "development",
+      "title": "Changelog generator",
+      "summary": "Generating an understandable CHANGELOG from commit history.",
+      "roles": [
+        "DOCUMENTOR"
+      ],
+      "default_roles": [
+        "DOCUMENTOR"
+      ]
+    },
+    {
+      "id": "git-commit-helper",
+      "category": "development",
+      "title": "Commit helper",
+      "summary": "Meaningful, well-formatted commit messages.",
+      "roles": [
+        "DEVOPS",
+        "BACKEND_DEV",
+        "FRONTEND_DEV"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "create-plan",
+      "category": "development",
+      "title": "Plan creation",
+      "summary": "A short implementation plan that splits a task into steps.",
+      "roles": [
+        "ARCHITECT",
+        "PM"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "react-best-practices",
+      "category": "web-development",
+      "title": "React best practices",
+      "summary": "React/Next.js performance and re-render rules.",
+      "roles": [
+        "FRONTEND_DEV"
+      ],
+      "default_roles": [
+        "FRONTEND_DEV"
+      ]
+    },
+    {
+      "id": "react-state-management",
+      "category": "web-development",
+      "title": "React state management",
+      "summary": "Separating local/global state from server state.",
+      "roles": [
+        "FRONTEND_DEV"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "tailwind-design-system",
+      "category": "web-development",
+      "title": "Tailwind design system",
+      "summary": "A token-based design system with Tailwind.",
+      "roles": [
+        "FRONTEND_DEV",
+        "DESIGNER"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "zod-validation-expert",
+      "category": "web-development",
+      "title": "Zod validation",
+      "summary": "Schema-based input validation.",
+      "roles": [
+        "FRONTEND_DEV",
+        "BACKEND_DEV"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "web-performance-optimization",
+      "category": "web-development",
+      "title": "Web performance optimization",
+      "summary": "Bundle size, caching and loading strategies.",
+      "roles": [
+        "FRONTEND_DEV",
+        "SEO_OPTIMIZER"
+      ],
+      "default_roles": [
+        "SEO_OPTIMIZER"
+      ]
+    },
+    {
+      "id": "frontend-design",
+      "category": "creative-design",
+      "title": "Frontend design",
+      "summary": "Distinctive, deliberate visual design: typography, color, spacing, layout.",
+      "roles": [
+        "DESIGNER",
+        "FRONTEND_DEV"
+      ],
+      "default_roles": [
+        "DESIGNER"
+      ]
+    },
+    {
+      "id": "ui-ux-pro-max",
+      "category": "creative-design",
+      "title": "UI/UX Pro Max",
+      "summary": "Comprehensive interface/experience design guide (patterns, styles, palettes).",
+      "roles": [
+        "DESIGNER",
+        "MOBILE_DESIGNER"
+      ],
+      "default_roles": [
+        "DESIGNER",
+        "MOBILE_DESIGNER"
+      ]
+    },
+    {
+      "id": "ui-design-system",
+      "category": "creative-design",
+      "title": "UI design system",
+      "summary": "Building a component- and token-oriented design system.",
+      "roles": [
+        "DESIGNER"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "web-design-guidelines",
+      "category": "creative-design",
+      "title": "Web design guidelines",
+      "summary": "Visual and interaction guidelines for web interfaces.",
+      "roles": [
+        "DESIGNER",
+        "FRONTEND_DEV"
+      ],
+      "default_roles": [
+        "DESIGNER"
+      ]
+    },
+    {
+      "id": "accessibility-auditor",
+      "category": "creative-design",
+      "title": "Accessibility auditor",
+      "summary": "Auditing an interface for accessibility.",
+      "roles": [
+        "DESIGNER",
+        "QA",
+        "MOBILE_DESIGNER"
+      ],
+      "default_roles": [
+        "MOBILE_DESIGNER"
+      ]
+    },
+    {
+      "id": "c4-architecture",
+      "category": "creative-design",
+      "title": "C4 architecture diagrams",
+      "summary": "Explaining architecture with context/container/component diagrams.",
+      "roles": [
+        "ARCHITECT"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "mermaid-diagrams",
+      "category": "creative-design",
+      "title": "Mermaid diagrams",
+      "summary": "Generating flow/sequence/ER diagrams from text.",
+      "roles": [
+        "ARCHITECT",
+        "DOCUMENTOR"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "security-best-practices",
+      "category": "security",
+      "title": "Security best practices",
+      "summary": "Language/framework-specific security review and hardening suggestions.",
+      "roles": [
+        "BACKEND_DEV",
+        "FRONTEND_DEV",
+        "QA",
+        "SECURITY_REVIEWER"
+      ],
+      "default_roles": [
+        "SECURITY_REVIEWER"
+      ]
+    },
+    {
+      "id": "api-security-best-practices",
+      "category": "security",
+      "title": "API security",
+      "summary": "Authentication, authorization, rate limiting and input validation.",
+      "roles": [
+        "BACKEND_DEV",
+        "ARCHITECT",
+        "SECURITY_REVIEWER"
+      ],
+      "default_roles": [
+        "SECURITY_REVIEWER"
+      ]
+    },
+    {
+      "id": "secrets-management",
+      "category": "security",
+      "title": "Secrets management",
+      "summary": "Managing keys/passwords; never writing secrets into code.",
+      "roles": [
+        "DEVOPS",
+        "BACKEND_DEV"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "top-web-vulnerabilities",
+      "category": "security",
+      "title": "Top web vulnerabilities",
+      "summary": "OWASP-style vulnerabilities and their countermeasures.",
+      "roles": [
+        "QA",
+        "BACKEND_DEV",
+        "SECURITY_REVIEWER"
+      ],
+      "default_roles": [
+        "SECURITY_REVIEWER"
+      ]
+    },
+    {
+      "id": "threat-modeling-expert",
+      "category": "security",
+      "title": "Threat modeling",
+      "summary": "Producing a STRIDE-style threat model.",
+      "roles": [
+        "ARCHITECT"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "webapp-testing",
+      "category": "security",
+      "title": "Web app testing",
+      "summary": "Approach to testing a running web application with a browser.",
+      "roles": [
+        "QA"
+      ],
+      "default_roles": [
+        "QA"
+      ]
+    },
+    {
+      "id": "mobile-design",
+      "category": "creative-design",
+      "title": "Mobile design",
+      "summary": "Mobile-first design thinking and decisions for iOS/Android.",
+      "roles": [
+        "DESIGNER",
+        "MOBILE_DESIGNER"
+      ],
+      "default_roles": [
+        "MOBILE_DESIGNER"
+      ]
+    },
+    {
+      "id": "roier-seo",
+      "category": "web-development",
+      "title": "Technical SEO",
+      "summary": "Technical SEO audit and fixes with Lighthouse/PageSpeed.",
+      "roles": [
+        "SEO_OPTIMIZER",
+        "FRONTEND_DEV"
+      ],
+      "default_roles": [
+        "SEO_OPTIMIZER"
+      ]
+    },
+    {
+      "id": "security-audit",
+      "category": "security",
+      "title": "Security audit",
+      "summary": "Web application security audit workflow.",
+      "roles": [
+        "SECURITY_REVIEWER",
+        "QA"
+      ],
+      "default_roles": [
+        "SECURITY_REVIEWER"
+      ]
+    },
+    {
+      "id": "sast-configuration",
+      "category": "security",
+      "title": "SAST configuration",
+      "summary": "Setting up and configuring static application security testing tools.",
+      "roles": [
+        "SECURITY_REVIEWER",
+        "DEVOPS"
+      ],
+      "default_roles": []
+    },
+    {
+      "id": "code-reviewer",
+      "category": "development",
+      "title": "Code reviewer",
+      "summary": "Comprehensive code review guide for TypeScript/JavaScript/Python and more.",
+      "roles": [
+        "CODE_REVIEWER",
+        "QA",
+        "ARCHITECT"
+      ],
+      "default_roles": [
+        "CODE_REVIEWER"
+      ]
+    },
+    {
+      "id": "dependency-updater",
+      "category": "development",
+      "title": "Dependency updater",
+      "summary": "Language-independent smart dependency management.",
+      "roles": [
+        "CODE_REVIEWER",
+        "DEVOPS"
+      ],
+      "default_roles": []
+    }
+  ]
+}

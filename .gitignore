@@ -1,0 +1,72 @@
+# Node & Frontend dependencies
+node_modules/
+dashboard/node_modules/
+dashboard/dist/
+.npm/
+.eslintcache
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing, logs & Playwright
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+reports/screenshots/
+
+# Uploaded spec files & temporary project test folders
+uploads/*
+!uploads/.gitkeep
+demo-app/
+demo_project/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Runtime registry (changes on every event, contains test-profile passwords)
+history/*.json
+history/*.bak
+history/*.log
+history/*.corrupt-*
+!history/.gitkeep
+.pytest_data/
+
+# Claude Desktop kayıt betiği günlüğü
+scripts/.register_claude_desktop.log
+history/backups/
+
+# Üçüncü taraf skill içerik önbelleği (çalışma anında indirilir, depoya girmez)
+history/skills_cache/
+
+# Local AI-client files (not part of the repository)
+CLAUDE.md
+.agents/
