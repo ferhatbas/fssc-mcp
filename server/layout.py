@@ -33,7 +33,7 @@ LAYOUT_SETTING = "project_layout"
 # Kökte durabilen depo dosyaları ve platformun kökte aradığı klasörler
 ROOT_FILES = ("README.md", "CHANGELOG.md", "CONTRIBUTING.md", "CLAUDE.md", "AGENTS.md", "GEMINI.md", ".gitignore", ".gitattributes",
               ".editorconfig", ".gitlab-ci.yml", ".mcp.json", "LICENSE", "LICENSE.md", "LICENSE.txt")
-ROOT_DIRS = (".github",)
+ROOT_DIRS = (".github", "e2e")        # e2e/screens/*.json ekran sözleşmeleri proje kökünde okunur (server/ui_screens.py); uygulama klasörüne taşınmaz
 
 # Eski (düz) düzende bilinen klasör adları → mantıksal rol
 LEGACY_APP_DIRS = {"frontend": "web", "web": "web", "client": "web", "mobile": "mobile", "admin": "admin",

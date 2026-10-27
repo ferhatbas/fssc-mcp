@@ -215,6 +215,38 @@ def write_files(project_dir: str, files: List[Dict[str, str]], scan_secrets: boo
     return written
 
 
+DELETE_LIMIT = 80
+_NO_DELETE = ("package.json", "package-lock.json", "tsconfig.json", ".gitignore", "README.md", "LICENSE", "CLAUDE.md", "GEMINI.md")
+
+
+def delete_files(project_dir: str, rels: Any) -> List[str]:
+    """Teslimdeki `payload.delete[]` yollarını siler (yalnızca var olan dosyalar; klasör, korunan yol, kök dışı ve yönetim dosyaları reddedilir). Silinen yolları döner."""
+    if not rels:
+        return []
+    if not isinstance(rels, list):
+        raise StepOutputError(tx("payload.delete bir yol listesi olmalı."), [tx("payload.delete bir yol listesi olmalı.")])
+    base = Path(project_dir).resolve()
+    deleted: List[str] = []
+    for raw in rels:
+        rel = str(raw or "").strip().replace("\\", "/").lstrip("/")
+        if len(deleted) >= DELETE_LIMIT:
+            raise StepOutputError(tx("En çok {n} dosya silinebilir.", n=DELETE_LIMIT), [tx("En çok {n} dosya silinebilir.", n=DELETE_LIMIT)])
+        if not rel or rel.startswith("..") or "/../" in f"/{rel}/" or is_protected_path(rel):
+            raise StepOutputError(tx("Silinemez yol: {rel}", rel=rel or raw), [tx("Silinemez yol: {rel}", rel=rel or raw)])
+        if rel in _NO_DELETE or rel.rsplit("/", 1)[-1] in ("package.json", "tsconfig.json"):
+            raise StepOutputError(tx("Yönetim dosyası silinemez: {rel}", rel=rel), [tx("Yönetim dosyası silinemez: {rel}", rel=rel)])
+        target = (base / rel).resolve()
+        try:
+            target.relative_to(base)
+        except ValueError:
+            raise StepOutputError(tx("Proje kökü dışı yol: {rel}", rel=rel), [tx("Kök dışı yol: {rel}", rel=rel)])
+        if not target.is_file():
+            raise StepOutputError(tx("Silinecek dosya yok (ya da klasör): {rel}", rel=rel), [tx("Silinecek dosya yok (ya da klasör): {rel}", rel=rel)])
+        target.unlink()
+        deleted.append(rel)
+    return deleted
+
+
 async def pace(hub, run: PipelineRun, seconds: float):
     """Doğal akış hızı: yalnızca şablon motorunda ve 'natural' ayarında uyur."""
     if run.engine != "template" or seconds <= 0:
@@ -558,6 +590,11 @@ async def finish_step(hub, run: PipelineRun, envelope: Dict[str, Any], tokens_in
             await _record_delivery_secret(hub, run, record, handler, e.secret_findings)     # G4: yazım anı sır bulgusu
         raise
     result.extra["files_written"] = written
+    if record.kind in ("task", "fix") and (envelope.get("payload") or {}).get("delete"):
+        deleted = delete_files(ctx.project_dir, (envelope.get("payload") or {}).get("delete"))
+        result.extra["files_deleted"] = deleted
+        result.summary = f"{result.summary} " + tx("[{n} dosya silindi]", n=len(deleted))
+        await hub.record_task_audit(record.issue_id, handler.agent_id, "FILES_DELETED", notes=(tx("Silinen dosyalar: ") + ", ".join(deleted))[:280])
     lang_findings = LANGCHECK.check_files(ctx.lang, result.files) + LANGCHECK.check_texts(ctx.lang, {"summary": result.summary})
     if lang_findings:                                                   # karışık dil: yalnızca uyarı (teslim reddedilmez)
         result.extra["language_warnings"] = lang_findings
@@ -1363,6 +1400,30 @@ def _next_jira_order(hub) -> int:
     return (max(orders) if orders else 0) + 1
 
 
+def _norm_title(title: Any) -> str:
+    """Başlık karşılaştırma anahtarı: küçük harf, boşluklar tek, 'sprint N' → 'sprint #' (her sprintte yeniden açılan aynı bulgu aynı anahtara düşer)."""
+    import re as _re
+    return _re.sub(r"(?i)sprint\s*\d+", "sprint #", " ".join(str(title or "").lower().split()))
+
+
+def _open_duplicate(hub, task: Dict[str, Any], origin: str) -> Optional[Dict[str, Any]]:
+    """Aynı (normalize) başlıkla AÇIK bir iş varsa onu; ya da aynı başlıkla ikiden fazla kez BİTMİŞ iş varsa (kapanıp yeniden açılan bulgu: sonsuz döngü işareti) en yenisini döner.
+    Yönetici, tasarımcı ve elle açılan işler muaftır."""
+    if str(origin or "").upper() in ("MANAGER", "DESIGNER", "HUMAN"):
+        return None
+    key = _norm_title(task.get("title"))
+    if len(key) < 12:
+        return None
+    same = [i for i in hub.jira_issues.values() if not i.get("deleted") and str(i.get("kind", "")).lower() == "task" and _norm_title(i.get("title")) == key]
+    open_ones = [i for i in same if i.get("status") != "DONE"]
+    if open_ones:
+        return open_ones[0]
+    done = [i for i in same if i.get("status") == "DONE"]
+    if len(done) >= 2:
+        return sorted(done, key=lambda x: int(x.get("order", 0) or 0))[-1]
+    return None
+
+
 def _done_duplicate(hub, task: Dict[str, Any], origin: str) -> Optional[Dict[str, Any]]:
     """Mimar/karar bölümü yeni görev önerir ama aynı başlıklı iş zaten DONE ise o kaydı döner (benzerlik >= 0.88; yalnızca TASK, silinmemiş, ARCHITECT/DECISION kaynağı)."""
     if origin not in ("ARCHITECT", "DECISION") or str(task.get("work_type") or "") in ("DESIGN", "BUG"):
@@ -1393,8 +1454,8 @@ async def _create_task_issues(hub, run: PipelineRun, tasks: List[Dict[str, Any]]
     order = _next_jira_order(hub)
     lay, docs_root = LAY.layout_of(hub), hub_docs_path(hub, "")
     for t in tasks:
-        dup = _done_duplicate(hub, t, origin)
-        if dup:                                      # aynı işin bitmiş kaydı var: yeni görev/adım açılmaz (bağımlılıklar bitmiş kayda çözülür)
+        dup = _done_duplicate(hub, t, origin) or _open_duplicate(hub, t, origin)
+        if dup:                                      # aynı işin açık ya da bitmiş kaydı var: yeni görev/adım açılmaz (bağımlılıklar mevcut kayda çözülür)
             key_to_issue[t["task_key"]] = dup["id"]
             await hub.record_task_audit(dup["id"], origin, "DUPLICATE_SKIPPED",
                                         notes=tx("Aynı işi tarif eden yeni görev açılmadı: {title}", title=str(t.get("title"))[:160]))

@@ -36,10 +36,45 @@ TMP_DIR = ".fs-workspace/tmp"
 _STRAY = re.compile(r"^(?:(?:build_step|complete_build_step|build|complete_build|submit|step|envelope)[_.-]?[A-Za-z_.-]*[0-9][A-Za-z0-9_.-]*|step_data)\.(?:js|mjs|cjs|py|ps1|sh|json)$", re.I)
 
 
+def rehome_misplaced_contracts(project_dir: str) -> list:
+    """Eski düzen hatası: `e2e/screens/*.json` ekran sözleşmeleri uygulama klasörüne (`apps/web/e2e/screens/`) taşınmıştı, oysa sunucu bunları proje kökünde okur.
+    Yanlış yerdekini köke taşır (köktekinden yeniyse üzerine yazar, değilse siler) ve boş kalan klasörü kaldırır."""
+    moved = []
+    root = os.path.abspath(project_dir)
+    apps = os.path.join(root, "apps")
+    if not os.path.isdir(apps):
+        return moved
+    dest_dir = os.path.join(root, "e2e", "screens")
+    for app in os.listdir(apps):
+        src_dir = os.path.join(apps, app, "e2e", "screens")
+        if not os.path.isdir(src_dir):
+            continue
+        for fn in os.listdir(src_dir):
+            if not fn.endswith(".json"):
+                continue
+            src, dst = os.path.join(src_dir, fn), os.path.join(dest_dir, fn)
+            try:
+                os.makedirs(dest_dir, exist_ok=True)
+                if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
+                    os.replace(src, dst)
+                else:
+                    os.remove(src)
+                moved.append(fn)
+            except OSError:
+                continue
+        for d in (src_dir, os.path.dirname(src_dir)):
+            try:
+                os.rmdir(d)
+            except OSError:
+                pass
+    return moved
+
+
 def sweep_stray_root_files(project_path: str) -> list:
     """Ajanın proje köküne bıraktığı geçici betik/zarf dosyalarını `.fs-workspace/tmp/` altına taşır (git'te izlenenlere dokunmaz)."""
     root = os.path.abspath(project_path)
     moved = []
+    rehome_misplaced_contracts(root)
     try:
         names = os.listdir(root)
     except OSError:

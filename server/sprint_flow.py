@@ -572,7 +572,12 @@ async def run_close_step(hub, run: PipelineRun, record: StepRecord) -> "P.StepOu
         await hub.broadcast({"type": "PROJECT_DONE"})
         await P.advance_run(hub, run)
         return P.StepOutcome(status="RUN_COMPLETE" if run.is_terminal else "NEXT", message=record.summary + " " + tx("Ürün tamamlandı."))
-    if len(st["sprints"]) >= min(c["max_sprints"], M.autonomy(hub)["budget"]["max_sprints"]):
+    repeat = SP.repeat_check(hub, n)
+    if repeat:                                       # devre kesici: aynı iş sprint sprint tekrarlanıyor; zincir durur, yönetici nedeni çözüp devam eder
+        st["project_status"] = "PAUSED"
+        st["pause_reason"] = {"code": "REPEATING_SPRINTS", "detail": repeat, "since": _iso()}
+        await hub.broadcast({"type": "SPRINTS_REPEATING", "detail": repeat})
+    elif len(st["sprints"]) >= min(c["max_sprints"], M.autonomy(hub)["budget"]["max_sprints"]):
         st["project_status"] = "PAUSED"
         await hub.broadcast({"type": "BUDGET_EXCEEDED", "limit": "max_sprints"})
     elif c["auto_chain"]:
@@ -582,13 +587,16 @@ async def run_close_step(hub, run: PipelineRun, record: StepRecord) -> "P.StepOu
     return P.StepOutcome(status="RUN_COMPLETE" if run.is_terminal else "NEXT", message=record.summary)
 
 
-async def resume_if_budget_allows(hub) -> bool:
+async def resume_if_budget_allows(hub, acknowledge: bool = False) -> bool:
     """Proje `max_sprints` bütçesi yüzünden PAUSED idiyse ve bütçe artık yeni sprinte izin veriyorsa ACTIVE'e döner (yönetici bütçeyi artırdığında ya da yeni koşu başlattığında)."""
     st = SP.ensure_state(hub)
     if st.get("project_status") != "PAUSED":
         return False
     if len(st["sprints"]) >= min(SP.cfg(hub)["max_sprints"], M.autonomy(hub)["budget"]["max_sprints"]):
         return False
+    if st.get("pause_reason") and not acknowledge:      # devre kesici: yönetici nedeni gördüğünü onaylamadan sürmez
+        return False
+    st["pause_reason"] = None
     st["project_status"] = "ACTIVE"
     hub.mark_dirty()
     await hub.broadcast({"type": "PROJECT_RESUMED", "reason": tx("max_sprints bütçesi artırıldı")})
@@ -723,7 +731,7 @@ def _proposal(hub, n: int, cap: int):
                 out.append({"issue_id": iid, "reason": "BAĞIMLILIK"})
         chosen = SP.execution_order(chosen) if chosen else chosen          # yürütme sırası toplantı listesine değil yönetici önceliğine göre
         if chosen and sum(1 for c in chosen if SP.is_test_work(c)) <= SP.test_cap(hub, cap) and sum(1 for c in chosen if SP.is_quality_work(c)) <= SP.quality_limit(hub, cap):
-            if len(chosen) < min(cap, max(1, cap // 2, SP.cfg(hub)["min_tasks"])):
+            if len(chosen) < min(cap, max(1, cap // 2, SP.cfg(hub)["min_tasks"])) and not hub.get_settings().get("product_first"):      # ürün önce: toplantının dar taahhüdü başka işlerle doldurulmaz
                 # Toplantı kapasitenin yarısından azını taahhüt etti: sunucunun dengeli seçimiyle (bağımlılığı sağlanan) işlerle tamamlanır (sprint tek işle kalmasın)
                 have = {c["id"] for c in chosen}
                 done = {k for k, v in hub.jira_issues.items() if v.get("status") == "DONE"}

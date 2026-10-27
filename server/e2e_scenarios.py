@@ -104,13 +104,28 @@ class _PlaywrightDriver:
         await self.page.screenshot(path=os.path.join(screenshots_dir_for(self.project_dir), fn), full_page=True)
         return screenshot_url(self.project_id, fn)
 
+    hash_router = False
+
     async def goto(self, url: str):
+        if self.hash_router:                      # karma (#) yönlendirici: /giris yerine /#/giris açılır (yol adresi hep ana sayfayı gösterir)
+            from urllib.parse import urlsplit
+            u = urlsplit(url)
+            if u.path not in ("", "/") and not u.fragment:
+                url = f"{u.scheme}://{u.netloc}/#{u.path}" + (f"?{u.query}" if u.query else "")
         await self.page.goto(url, wait_until="domcontentloaded", timeout=20000)
 
     async def click(self, sel: str):
         await self.page.click(sel, timeout=8000)
 
     async def fill(self, sel: str, val: str):
+        # <select> alanları fill ile doldurulamaz: seçenek seçilir (değer ya da görünen metin)
+        tag = await self.page.locator(sel).first.evaluate("e => e.tagName.toLowerCase()", timeout=8000)
+        if tag == "select":
+            try:
+                await self.page.select_option(sel, value=val, timeout=8000)
+            except Exception:
+                await self.page.select_option(sel, label=val, timeout=8000)
+            return
         await self.page.fill(sel, val, timeout=8000)
 
     async def text(self) -> str:
@@ -121,6 +136,21 @@ class _PlaywrightDriver:
 
     async def url(self) -> str:
         return self.page.url
+
+
+async def _detect_hash_router(browser: Any, base_url: str) -> bool:
+    """Uygulama karma (#) yönlendirici kullanıyor mu? Ana sayfada `#/...` bağlantısı varsa evet (yol adresleri bu uygulamalarda hep ana sayfayı gösterir)."""
+    try:
+        ctx = await browser.new_context()
+        page = await ctx.new_page()
+        try:
+            await page.goto(base_url, wait_until="domcontentloaded", timeout=20000)
+            await page.wait_for_timeout(500)
+            return bool(await page.evaluate("!!document.querySelector('a[href^=\"#/\"]') || location.hash.startsWith('#/')"))
+        finally:
+            await ctx.close()
+    except Exception:
+        return False
 
 
 async def run_scenarios(project_dir: str, base_url: str, driver_factory: Optional[Callable[[], Any]] = None, project_id: Optional[str] = None) -> Dict[str, Any]:
@@ -140,11 +170,14 @@ async def run_scenarios(project_dir: str, base_url: str, driver_factory: Optiona
             async with async_playwright() as pw:
                 browser = await pw.chromium.launch(headless=True)
                 try:
+                    hash_router = await _detect_hash_router(browser, base_url)
                     for sc in scenarios:
                         ctx = await browser.new_context()
                         page = await ctx.new_page()
                         try:
-                            results.append(await run_scenario(_PlaywrightDriver(page, project_dir, project_id), base_url, sc))
+                            drv = _PlaywrightDriver(page, project_dir, project_id)
+                            drv.hash_router = hash_router
+                            results.append(await run_scenario(drv, base_url, sc))
                         finally:
                             await ctx.close()
                 finally:

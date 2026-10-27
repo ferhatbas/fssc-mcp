@@ -278,7 +278,8 @@ class TaskHandler(StepHandler):
         claim_note = ("" if self.kind != "task" else
                       " " + tx("Görev mevcut kodla ZATEN karşılanıyorsa dosya yeniden yazma: `files` boş bırakıp `payload.already_satisfied` = "
                                "{\"evidence\":[{\"criterion\":\"kabul kriteri metni\",\"test\":\"commit'li test dosyasının yolu\"}]} ver (her kabul kriteri için bir kanıt testi; sunucu o testleri koşar)."))
-        return base + "\n" + tx("Bu adım için task_key=\"{key}\"; `files` boş olamaz.", key=self.task_key) + claim_note + extra
+        delete_note = " " + tx("Dosya SİLMEN gerekiyorsa `payload.delete` = [\"proje köküne göreli yol\", ...] ver (en çok 80 dosya; yalnızca var olan dosyalar, klasör ve korunan yollar silinemez); silme tek başına geçerli bir teslimdir.")
+        return base + "\n" + tx("Bu adım için task_key=\"{key}\"; `files` boş olamaz.", key=self.task_key) + claim_note + delete_note + extra
 
     # ------------------------------------------------------------------
     def template_output(self, ctx: StepContext) -> Dict[str, Any]:
@@ -373,7 +374,7 @@ class TaskHandler(StepHandler):
             result.extra["satisfied_tests"] = SAT.validate_claim(ctx, claim)        # geçersizse StepOutputError: ajan kanıtı düzeltip yeniden gönderir
             result.summary = result.summary + " " + tx("[kanıtla kapanış: {n} test dosyası]", n=len(result.extra['satisfied_tests']))
             return result
-        if not result.files:
+        if not result.files and not env.get("payload", {}).get("delete"):
             from ..llm.parsing import StepOutputError
             raise StepOutputError(tx("Görev teslimi en az bir dosya içermeli (payload.files boş); görev mevcut kodla zaten karşılanıyorsa `payload.already_satisfied` ile kanıt göster."),
                                   [tx("payload.files boş olamaz")])

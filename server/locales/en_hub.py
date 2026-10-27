@@ -651,4 +651,22 @@ EN = {
         '(screen fidelity could not be checked: {note})',
     '✗ Ekran mockup ile uyuşmuyor; düzeltme hakkı bitti, görev bitmiş sayılmaz: ':
         '✗ The screen does not match the mockup; fix rounds are used up, the task is not counted as done: ',
+    'payload.delete bir yol listesi olmalı.':
+        'payload.delete must be a list of paths.',
+    '[{n} dosya silindi]':
+        '[{n} files deleted]',
+    'En çok {n} dosya silinebilir.':
+        'At most {n} files can be deleted.',
+    'Silinemez yol: {rel}':
+        'Path cannot be deleted: {rel}',
+    'Yönetim dosyası silinemez: {rel}':
+        'Management file cannot be deleted: {rel}',
+    'Silinecek dosya yok (ya da klasör): {rel}':
+        'File to delete does not exist (or is a folder): {rel}',
+    'Proje kökü dışı yol: {rel}':
+        'Path is outside the project root: {rel}',
+    'Silinen dosyalar: ':
+        'Deleted files: ',
+    'Dosya SİLMEN gerekiyorsa `payload.delete` = ["proje köküne göreli yol", ...] ver (en çok 80 dosya; yalnızca var olan dosyalar, klasör ve korunan yollar silinemez); silme tek başına geçerli bir teslimdir.':
+        'If you NEED TO DELETE files, give `payload.delete` = ["path relative to the project root", ...] (at most 80 files; only existing files, folders and protected paths cannot be deleted); a deletion alone is a valid delivery.',
 }

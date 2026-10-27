@@ -9,6 +9,23 @@ FS-SC is the coordinator, the state machine and the referee that checks the work
 
 ![FS-SC dashboard — Jira board, live agent thinking, sprint progress](docs/images/manual/02-board-tree.png)
 
+![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)
+![MCP](https://img.shields.io/badge/MCP-server-8a2be2)
+![React](https://img.shields.io/badge/dashboard-React%20%2B%20Vite-61dafb)
+
+**Who it is for:** developers who already pay for an AI coding client and want it to run a whole project (planning, sprints, tests, commits) with checks and a live board, instead of one long chat.
+
+**Quick start**
+
+```bash
+git clone https://github.com/ferhatbas/fssc-mcp.git && cd fssc-mcp
+pip install -r requirements.txt && cd dashboard && npm install && npm run build && cd ..
+python -m server.main --mode web          # http://127.0.0.1:8099
+```
+
+Then connect your client ([how](#connect-your-ai-client)) and try the sample brief in [`examples/`](examples/).
+
 **New here? Read the [User Manual](docs/USER_MANUAL.md)** — a screen-by-screen guide to the whole dashboard, with screenshots.
 
 ---
@@ -281,7 +298,7 @@ docs/              user manual and screenshots
 ## Contributing and development
 
 Architecture notes, module map, coding conventions, how to add a step, an agent or a language, and the release process are in
-**[DEVELOPER.md](DEVELOPER.md)**. Run the tests with:
+**[DEVELOPER.md](DEVELOPER.md)**; see also [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Run the tests with:
 
 ```bash
 python -m pytest -q

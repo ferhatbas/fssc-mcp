@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "fssc-visual-observer": {
+      "command": "python",
+      "args": ["-m", "server.main", "--mode", "stdio"],
+      "cwd": "/path/to/fssc-mcp",
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONIOENCODING": "utf-8",
+        "OBSERVER_PORT": "8099"
+      }
+    }
+  }
+}

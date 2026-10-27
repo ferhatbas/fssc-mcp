@@ -113,6 +113,25 @@ def ensure_state(hub) -> Dict[str, Any]:
     return st
 
 
+def _norm_goal(goal: Any) -> str:
+    import re as _re
+    return _re.sub(r"\d+", "#", " ".join(str(goal or "").lower().split()))
+
+
+def repeat_check(hub, n: int, window: int = 3) -> Optional[str]:
+    """Devre kesici: son `window` sprint aynı (rakamları yok sayılmış) hedefle, her biri en çok 2 işle kapandıysa (ya da son N sprintte aynı E2E hatası sürdüyse)
+    sistem aynı işi tekrar tekrar planlıyor demektir. Açıklama metnini döner (yoksa None)."""
+    sprints = [s for s in ensure_state(hub).get("sprints", []) if s.get("sprint_number", 0) <= n]
+    last = sorted(sprints, key=lambda x: x["sprint_number"])[-window:]
+    if len(last) < window:
+        return None
+    if len({_norm_goal(x.get("goal")) for x in last}) == 1 and all(len(x.get("committed_issue_ids") or []) <= 2 for x in last):
+        return f"Sprint {last[0]['sprint_number']}-{last[-1]['sprint_number']}: aynı hedef ({str(last[-1].get('goal') or '')[:100]}) {window} sprint boyunca tekrarlandı"
+    if all(((x.get("dod") or {}).get("e2e") or {}).get("status") == "FAILED" for x in last):
+        return f"Sprint {last[0]['sprint_number']}-{last[-1]['sprint_number']}: E2E {window} sprint art arda kaldı"
+    return None
+
+
 def _close_superseded(hub, st: Dict[str, Any]) -> None:
     """Daha yeni bir sprint çalışırken (IN_PROGRESS) eskide takılı kalan sprintler (IN_REVIEW / BLOCKED / COMMITTED) kapatılır:
     bitmeyen işleri zaten yeni sprint taşıdı; açık kalan eski sprint "güncel sprint" gösterimini ve süzgeçleri yanıltıyordu."""

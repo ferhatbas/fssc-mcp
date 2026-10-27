@@ -2854,7 +2854,7 @@ async def project_file(path: str = ""):
 
 
 @app.post("/api/project/resume")
-async def project_resume():
+async def project_resume(request: Request):
     """Sprint bütçesi yüzünden duran projeyi sürdürür (bütçe yeni sprinte izin veriyorsa). Hâlâ doluysa 409: önce max_sprints bütçesi artırılmalı."""
     from . import meetings as M
     from . import sprint as SP
@@ -2863,8 +2863,14 @@ async def project_resume():
     limit = min(SP.cfg(hub)["max_sprints"], M.autonomy(hub)["budget"]["max_sprints"])
     if st.get("project_status") != "PAUSED":
         return JSONResponse(content={"status": "OK", "resumed": False, "project_status": st.get("project_status"), "sprints": len(st["sprints"]), "limit": limit})
-    if await SPF.resume_if_budget_allows(hub):
+    try:
+        ack = bool((await request.json()).get("acknowledge"))
+    except Exception:
+        ack = False
+    if await SPF.resume_if_budget_allows(hub, acknowledge=ack):
         return JSONResponse(content={"status": "OK", "resumed": True, "project_status": "ACTIVE", "sprints": len(st["sprints"]), "limit": limit})
+    if st.get("pause_reason") and not ack:
+        return JSONResponse(status_code=409, content={"error": st["pause_reason"].get("detail") or "Devre kesici", "pause_reason": st["pause_reason"]})
     return JSONResponse(status_code=409, content={"error": tx("Sprint bütçesi dolu ({used}/{limit}); önce max_sprints bütçesini artırın.", used=len(st['sprints']), limit=limit), "sprints": len(st["sprints"]), "limit": limit})
 
 

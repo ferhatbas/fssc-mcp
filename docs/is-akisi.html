@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FS-SC İş Akışı</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1c1b22; --ink2: #55536a; --line: #dcd9e8;
+  --man: #7a5af8; --man-bg: #efeafe;
+  --srv: #0e9f7e; --srv-bg: #e2f6f0;
+  --cli: #e8890c; --cli-bg: #fdf0dc;
+  --prj: #3b6fe0; --prj-bg: #e6edfc;
+  --bad: #d6453d; --bad-bg: #fbe7e5;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14131a; --panel: #1d1c26; --ink: #ecebf5; --ink2: #a8a6c0; --line: #34324a;
+    --man: #a48bff; --man-bg: #2a2447;
+    --srv: #3fd0aa; --srv-bg: #123a31;
+    --cli: #ffb347; --cli-bg: #3d2c10;
+    --prj: #7ea4ff; --prj-bg: #172a52;
+    --bad: #ff7b72; --bad-bg: #44201e;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 6px; }
+h2 { font-size: 20px; margin: 44px 0 6px; }
+p.lead { color: var(--ink2); margin: 0 0 8px; max-width: 760px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 13px; color: var(--ink2); }
+.dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+svg { width: 100%; height: auto; display: block; }
+svg text { font-family: inherit; fill: var(--ink); }
+.small { font-size: 12.5px; fill: var(--ink2); }
+.b { font-weight: 700; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 14px; counter-reset: s; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 14px 14px 52px; position: relative; }
+.step::before { counter-increment: s; content: counter(s); position: absolute; left: 14px; top: 14px; width: 26px; height: 26px; border-radius: 50%; background: var(--srv-bg); color: var(--srv); font-weight: 800; display: grid; place-items: center; }
+.step b { display: block; margin-bottom: 2px; }
+.step span { color: var(--ink2); font-size: 13.5px; }
+.tag { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
+.t-man { background: var(--man-bg); color: var(--man); } .t-srv { background: var(--srv-bg); color: var(--srv); }
+.t-cli { background: var(--cli-bg); color: var(--cli); } .t-bad { background: var(--bad-bg); color: var(--bad); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--ink2); font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 14px; }
+.callout { border-left: 4px solid var(--srv); background: var(--srv-bg); padding: 12px 14px; border-radius: 8px; margin-top: 14px; }
+.callout.warn { border-color: var(--cli); background: var(--cli-bg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FS-SC: işler nasıl yürüyor?</h1>
+<p class="lead">Sen ne istediğini söylersin; yapay zekâ istemcin (Claude ya da Antigravity) rolleri oynayarak üretir; FS-SC sunucusu her teslimi denetler, projeye yazar, doğrular ve kaydeder. Sunucu hiçbir modeli çağırmaz: üretimi senin aboneliğinle istemci yapar.</p>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--man)"></span>Sen (yönetici) ve pano</span>
+  <span><span class="dot" style="background:var(--srv)"></span>FS-SC sunucusu</span>
+  <span><span class="dot" style="background:var(--cli)"></span>Yapay zekâ istemcisi (Claude / Antigravity)</span>
+  <span><span class="dot" style="background:var(--prj)"></span>Hedef proje (örn. mcp_test)</span>
+</div>
+
+<h2>1. Büyük resim</h2>
+<p class="lead">Dört taraf var. Ok yönleri veri akışını gösterir: sen kararı verirsin, istemci üretir, sunucu denetler ve projeye yazar.</p>
+<div class="card">
+<svg viewBox="0 0 1000 330" role="img" aria-label="FS-SC mimarisi: yönetici, sunucu, istemci ve hedef proje">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker>
+  </defs>
+  <!-- Yönetici -->
+  <rect x="20" y="30" width="230" height="130" rx="16" fill="var(--man-bg)" stroke="var(--man)" stroke-width="2"/>
+  <text x="135" y="62" text-anchor="middle" class="b" font-size="17">Sen + Pano</text>
+  <text x="135" y="86" text-anchor="middle" class="small">http://127.0.0.1:8099</text>
+  <text x="135" y="110" text-anchor="middle" font-size="13">ürün tanımı · şartname · hedefler</text>
+  <text x="135" y="130" text-anchor="middle" font-size="13">teknoloji kararları · onaylar</text>
+  <text x="135" y="150" text-anchor="middle" font-size="13">notlar · duraklat / iptal</text>
+  <!-- Sunucu -->
+  <rect x="385" y="20" width="230" height="290" rx="16" fill="var(--srv-bg)" stroke="var(--srv)" stroke-width="2"/>
+  <text x="500" y="52" text-anchor="middle" class="b" font-size="17">FS-SC sunucusu</text>
+  <text x="500" y="72" text-anchor="middle" class="small">MCP + REST + WebSocket</text>
+  <g font-size="13">
+    <text x="500" y="106" text-anchor="middle">Durum makinesi (koşu, sprint, Jira)</text>
+    <text x="500" y="132" text-anchor="middle">Teslim denetimi (şema, sır, düzen)</text>
+    <text x="500" y="158" text-anchor="middle">Doğrulama (derleme, test, lint)</text>
+    <text x="500" y="184" text-anchor="middle">Kapılar (tasarım, ekran uyumu, DoD)</text>
+    <text x="500" y="210" text-anchor="middle">Git commit (SCM)</text>
+    <text x="500" y="236" text-anchor="middle">E2E: uygulamayı açar, tarayıcı koşar</text>
+    <text x="500" y="262" text-anchor="middle">Bellek: karar, hedef, ürün tanımı</text>
+    <text x="500" y="288" text-anchor="middle" class="small">modeli ÇAĞIRMAZ, API anahtarı yok</text>
+  </g>
+  <!-- İstemci -->
+  <rect x="750" y="30" width="230" height="130" rx="16" fill="var(--cli-bg)" stroke="var(--cli)" stroke-width="2"/>
+  <text x="865" y="62" text-anchor="middle" class="b" font-size="17">Yapay zekâ istemcisi</text>
+  <text x="865" y="86" text-anchor="middle" class="small">Claude Code / Desktop / Antigravity</text>
+  <text x="865" y="112" text-anchor="middle" font-size="13">12 rolü sırayla oynar:</text>
+  <text x="865" y="132" text-anchor="middle" font-size="12.5">PM · Mimar · Backend · Frontend</text>
+  <text x="865" y="150" text-anchor="middle" font-size="12.5">QA · DevOps · PO · Scrum Master…</text>
+  <!-- Proje -->
+  <rect x="750" y="205" width="230" height="105" rx="16" fill="var(--prj-bg)" stroke="var(--prj)" stroke-width="2"/>
+  <text x="865" y="237" text-anchor="middle" class="b" font-size="17">Hedef proje</text>
+  <text x="865" y="260" text-anchor="middle" font-size="13">apps/ · devops/ · docs/</text>
+  <text x="865" y="280" text-anchor="middle" font-size="13">.fs-workspace/ (Jira, sprint, ayar)</text>
+  <text x="865" y="298" text-anchor="middle" class="small">git deposu, ajan değil sunucu yazar</text>
+  <!-- oklar -->
+  <line x1="250" y1="95" x2="383" y2="95" stroke="var(--ink2)" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="318" y="84" text-anchor="middle" class="small">karar · onay</text>
+  <line x1="617" y1="95" x2="748" y2="95" stroke="var(--cli)" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="683" y="82" text-anchor="middle" class="small b">get_next_step</text>
+  <line x1="748" y1="125" x2="617" y2="125" stroke="var(--cli)" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="683" y="143" text-anchor="middle" class="small b">submit_step_result</text>
+  <line x1="617" y1="255" x2="748" y2="255" stroke="var(--prj)" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="683" y="245" text-anchor="middle" class="small">dosya yaz · commit</text>
+</svg>
+</div>
+<div class="callout"><b>Bu gerçek bir MCP sunucusu.</b> Resmî MCP Python SDK'sı (2.x) üstüne kurulu, 27 araç yayınlar (<code>start_pipeline_run</code>, <code>get_next_step</code>, <code>submit_step_result</code> …), stdio ile istemciye bağlanır ve aynı süreç REST + WebSocket ile panoyu da besler. Bu oturumda koşuyu o araçlarla sürdürdük.</div>
+
+<h2>2. Çekme döngüsü: bir adım nasıl geçer?</h2>
+<p class="lead">İstemci hep aynı üç hareketi tekrarlar. Sunucu iş vermez, istemci ister ("çekme modeli"); bu yüzden istemci koparsa koşu kaldığı yerden sürer.</p>
+<div class="card">
+<svg viewBox="0 0 1000 360" role="img" aria-label="Bir adımın yaşam döngüsü">
+  <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+  <!-- şeritler -->
+  <rect x="10" y="20" width="980" height="150" rx="14" fill="var(--cli-bg)" opacity=".55"/>
+  <text x="26" y="44" class="b" font-size="14" fill="var(--cli)" style="fill:var(--cli)">İSTEMCİ</text>
+  <rect x="10" y="180" width="980" height="160" rx="14" fill="var(--srv-bg)" opacity=".7"/>
+  <text x="26" y="204" class="b" font-size="14" style="fill:var(--srv)">SUNUCU</text>
+  <!-- istemci kutuları -->
+  <g font-size="13.5" text-anchor="middle">
+    <rect x="40" y="70" width="190" height="78" rx="12" fill="var(--panel)" stroke="var(--cli)" stroke-width="2"/>
+    <text x="135" y="98" class="b">1 · Adımı ister</text><text x="135" y="120" class="small">get_next_step</text><text x="135" y="138" class="small">rol + bağlam + sözleşme</text>
+    <rect x="290" y="70" width="190" height="78" rx="12" fill="var(--panel)" stroke="var(--cli)" stroke-width="2"/>
+    <text x="385" y="98" class="b">2 · Rolü üstlenir</text><text x="385" y="120" class="small">okur, plan notu yazar</text><text x="385" y="138" class="small">report_thinking</text>
+    <rect x="540" y="70" width="190" height="78" rx="12" fill="var(--panel)" stroke="var(--cli)" stroke-width="2"/>
+    <text x="635" y="98" class="b">3 · Teslim üretir</text><text x="635" y="120" class="small">tek JSON zarfı: dosyalar,</text><text x="635" y="138" class="small">özet, devir notu</text>
+    <rect x="790" y="70" width="180" height="78" rx="12" fill="var(--panel)" stroke="var(--cli)" stroke-width="2"/>
+    <text x="880" y="98" class="b">4 · Gönderir</text><text x="880" y="120" class="small">submit_step_result</text>
+  </g>
+  <!-- sunucu kutuları -->
+  <g font-size="13.5" text-anchor="middle">
+    <rect x="40" y="226" width="150" height="90" rx="12" fill="var(--panel)" stroke="var(--srv)" stroke-width="2"/>
+    <text x="115" y="254" class="b">Denetler</text><text x="115" y="276" class="small">şema · sır · klasör düzeni</text><text x="115" y="294" class="small">kütüphane onayı</text>
+    <rect x="215" y="226" width="150" height="90" rx="12" fill="var(--panel)" stroke="var(--srv)" stroke-width="2"/>
+    <text x="290" y="254" class="b">Yazar</text><text x="290" y="276" class="small">dosyaları projeye</text><text x="290" y="294" class="small">(silme dahil)</text>
+    <rect x="390" y="226" width="170" height="90" rx="12" fill="var(--panel)" stroke="var(--srv)" stroke-width="2"/>
+    <text x="475" y="254" class="b">Doğrular</text><text x="475" y="276" class="small">sözdizimi → kurulum →</text><text x="475" y="294" class="small">lint → build → test</text>
+    <rect x="585" y="226" width="170" height="90" rx="12" fill="var(--bad-bg)" stroke="var(--bad)" stroke-width="2"/>
+    <text x="670" y="254" class="b" style="fill:var(--bad)">Kalırsa</text><text x="670" y="276" class="small">düzeltme turu (en çok 2)</text><text x="670" y="294" class="small">aynı iş tekrar istemciye</text>
+    <rect x="780" y="226" width="190" height="90" rx="12" fill="var(--panel)" stroke="var(--srv)" stroke-width="2"/>
+    <text x="875" y="254" class="b">Geçerse</text><text x="875" y="276" class="small">git commit (feat/fix)</text><text x="875" y="294" class="small">Jira + pano güncellenir</text>
+  </g>
+  <g stroke="var(--ink2)" stroke-width="2" fill="none" marker-end="url(#b)">
+    <path d="M230 109H288"/><path d="M480 109H538"/><path d="M730 109H788"/>
+    <path d="M880 150V190Q880 205 860 205H130Q115 205 115 224"/>
+    <path d="M190 271H213"/><path d="M365 271H388"/><path d="M560 271H583" /><path d="M755 271H778"/>
+    <path d="M670 224V190" stroke-dasharray="5 4"/>
+  </g>
+  <text x="702" y="186" class="small" style="fill:var(--bad)">↺ yeniden dene</text>
+</svg>
+</div>
+<div class="callout warn"><b>Önemli kural:</b> bir iş "bitti" sayılmak için ajanın beyanı yetmez; sunucunun koştuğu doğrulama geçmeli. Test/derleme kalırsa görev açık kalır.</div>
+
+<h2>3. Bir sprint baştan sona</h2>
+<p class="lead">Koşu sprint kipinde bu sırayı izler. Her kutu bir "adım"dır; çoğunu istemci üretir, işaretli olanları sunucu kendisi koşar.</p>
+<div class="steps">
+  <div class="step"><b>Planlama toplantısı <span class="tag t-cli">istemci</span></b><span>Scrum Master adaylardan taahhüt seçer. "Ürün önce" modunda dar taahhüt başka işle doldurulmaz.</span></div>
+  <div class="step"><b>Sprint planı <span class="tag t-srv">sunucu</span></b><span>Taahhüt kesinleşir, kapasite ve bağımlılıklar denetlenir.</span></div>
+  <div class="step"><b>Görevler <span class="tag t-cli">istemci</span></b><span>Backend, frontend, DevOps işleri sırayla: teslim → doğrulama → gerekirse düzeltme → commit.</span></div>
+  <div class="step"><b>Ekran uyumu kapısı <span class="tag t-srv">sunucu</span></b><span>Tasarımdan gelen ekran görevleri, mockup ile çalışan ekran tarayıcıda karşılaştırılmadan bitmez.</span></div>
+  <div class="step"><b>Peer review + QA <span class="tag t-cli">istemci</span></b><span>QA test ve bug taraması yapar; bulgular Jira'ya iş olarak düşer.</span></div>
+  <div class="step"><b>E2E <span class="tag t-srv">sunucu</span></b><span>Sunucu uygulamayı gerçekten başlatır, Playwright ekran senaryolarını koşar, görüntü alır.</span></div>
+  <div class="step"><b>Mimar incelemesi <span class="tag t-cli">istemci</span></b><span>Yalnızca sunucunun verdiği fark ve kanıta dayanarak bulgu çıkarır.</span></div>
+  <div class="step"><b>PO kabulü <span class="tag t-cli">istemci</span></b><span>Her kabul kriteri için kanıta dayalı karar. Ret → iyileştirme görevleri ve yeniden tur.</span></div>
+  <div class="step"><b>Değerlendirme + retro <span class="tag t-cli">istemci</span></b><span>Retro yalnızca sunucu metriklerine dayanır: tamamlanan, düzeltme turu, E2E sonucu.</span></div>
+  <div class="step"><b>Kapanış <span class="tag t-srv">sunucu</span></b><span>Sprint kapanır, etiketlenir. Devre kesici: aynı iş 3 sprint tekrarlanırsa zincir durur.</span></div>
+</div>
+
+<h2>4. Sunucunun kapıları</h2>
+<p class="lead">Yapay zekânın kendi kendine "tamam" demesini engelleyen kontroller. Hepsi dosyalara, git'e ve süreçlere bakar; ajanın özetine değil.</p>
+<div class="card" style="padding:6px 12px">
+<table>
+  <tr><th>Kapı</th><th>Neye bakar</th><th>Kalırsa ne olur</th></tr>
+  <tr><td><b>Teslim denetimi</b></td><td>JSON şeması, sır (anahtar/parola), proje klasörü düzeni, Docker dosyalarının yeri, yeni kütüphane</td><td>Teslim reddedilir, aynı adım yeniden istenir</td></tr>
+  <tr><td><b>Doğrulama</b></td><td>Sözdizimi, kurulum, lint, build, test</td><td>Düzeltme turu (en çok 2); hak biterse görev FAILED</td></tr>
+  <tr><td><b>Sıkı DoD</b></td><td>Kod teslimi testle birlikte mi, testsiz kapanış var mı</td><td>İhlal düzeltme turu doğurur</td></tr>
+  <tr><td><b>Tasarım tamlığı</b></td><td>Mockup mobil uyumlu mu, durum bölümleri, uç noktalar kapsanmış mı</td><td>Tasarım düzeltme turu</td></tr>
+  <tr><td><b>Ekran uyumu</b></td><td>Mockup ile çalışan ekranın metin ve görsel benzerliği</td><td>Uyum görevi açılır; hak biterse görev bitmiş sayılmaz</td></tr>
+  <tr><td><b>Tekrar önleme</b></td><td>Aynı başlıkta açık ya da tekrar kapanan iş</td><td>Yeni iş açılmaz</td></tr>
+  <tr><td><b>Devre kesici</b></td><td>Son 3 sprint aynı hedef ya da aynı E2E hatası</td><td>Zincir durur, yöneticiye sorar</td></tr>
+</table>
+</div>
+
+<h2>5. Sen nerede devrede olursun?</h2>
+<p class="lead">Otomatik akışa şu noktalardan müdahale edersin; hiçbiri koşuyu bozmaz.</p>
+<div class="grid2">
+  <div class="card"><b>Başlamadan önce</b><br><span style="color:var(--ink2)">Ürün tanımı, şartname yükleme, teknoloji kararları penceresi (dil, veritabanı, barındırma), yeni kütüphane onayı.</span></div>
+  <div class="card"><b>Koşu sırasında</b><br><span style="color:var(--ink2)">Hedefler şeridi (hedef dışı iş yapılmaz), yönetici notu (sonraki adımın öncelikli talimatı), "Önce yap" şeridi, onay modu (otomatik / her adım), duraklat, iptal.</span></div>
+  <div class="card"><b>İşleri yönlendirirken</b><br><span style="color:var(--ink2)">New Issue ile yeni görev, Jira panosunda filtreler (iş türü, bu koşu, bitenleri gizle), görev kimliğine tıklayıp yapılanları ve dosyaları görme.</span></div>
+  <div class="card"><b>Yön değişince</b><br><span style="color:var(--ink2)">Kapsam düzeltme: ürün tanımını yazarsın, başlamamış kapsam dışı işler silinir, mimar PRD'yi yeniden yazar, kalan kısıtları kaldıran görevler açılır.</span></div>
+</div>
+
+<h2>6. Bir işin hayat yolu: örnek</h2>
+<p class="lead">"Kampüs/öğrenci ifadelerini kaldır" isteği tek cümleyle şöyle ilerledi.</p>
+<div class="card">
+<svg viewBox="0 0 1000 120" role="img" aria-label="Örnek iş yolu">
+  <defs><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+  <g font-size="12.5" text-anchor="middle">
+    <rect x="8" y="26" width="150" height="70" rx="12" fill="var(--man-bg)" stroke="var(--man)" stroke-width="2"/><text x="83" y="54" class="b">Sen: "metinleri</text><text x="83" y="72" class="b">temizle"</text>
+    <rect x="190" y="26" width="150" height="70" rx="12" fill="var(--srv-bg)" stroke="var(--srv)" stroke-width="2"/><text x="265" y="54" class="b">New Issue</text><text x="265" y="72" class="small">Jira'da görev</text>
+    <rect x="372" y="26" width="150" height="70" rx="12" fill="var(--cli-bg)" stroke="var(--cli)" stroke-width="2"/><text x="447" y="54" class="b">Frontend rolü</text><text x="447" y="72" class="small">dosyaları üretir</text>
+    <rect x="554" y="26" width="150" height="70" rx="12" fill="var(--srv-bg)" stroke="var(--srv)" stroke-width="2"/><text x="629" y="54" class="b">Doğrulama</text><text x="629" y="72" class="small">3 test kaldı</text>
+    <rect x="736" y="26" width="120" height="70" rx="12" fill="var(--cli-bg)" stroke="var(--cli)" stroke-width="2"/><text x="796" y="54" class="b">Düzeltme</text><text x="796" y="72" class="small">tur 1</text>
+    <rect x="878" y="26" width="116" height="70" rx="12" fill="var(--prj-bg)" stroke="var(--prj)" stroke-width="2"/><text x="936" y="54" class="b">Commit</text><text x="936" y="72" class="small">projede</text>
+  </g>
+  <g stroke="var(--ink2)" stroke-width="2" fill="none" marker-end="url(#c)"><path d="M158 61H188"/><path d="M340 61H370"/><path d="M522 61H552"/><path d="M704 61H734"/><path d="M856 61H876"/></g>
+</svg>
+</div>
+
+<p class="lead" style="margin-top:36px">Bu sayfa <code>docs/is-akisi.html</code> dosyasıdır; tarayıcıda açabilir ya da README'ye bağlayabilirsin.</p>
+</div>
+</body>
+</html>

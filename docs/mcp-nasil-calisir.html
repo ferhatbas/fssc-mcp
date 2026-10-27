@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCP sunucusu nasıl çalışır</title>
+<style>
+:root {
+  --bg: #f6f5f1; --panel: #ffffff; --ink: #1c1b22; --ink2: #55536a; --line: #dcd9e8; --code: #f1eff8;
+  --host: #7a5af8; --host-bg: #efeafe;
+  --cli: #e8890c; --cli-bg: #fdf0dc;
+  --srv: #0e9f7e; --srv-bg: #e2f6f0;
+  --mod: #3b6fe0; --mod-bg: #e6edfc;
+  --bad: #d6453d; --bad-bg: #fbe7e5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14131a; --panel: #1d1c26; --ink: #ecebf5; --ink2: #a8a6c0; --line: #34324a; --code: #25243a;
+    --host: #a48bff; --host-bg: #2a2447;
+    --cli: #ffb347; --cli-bg: #3d2c10;
+    --srv: #3fd0aa; --srv-bg: #123a31;
+    --mod: #7ea4ff; --mod-bg: #172a52;
+    --bad: #ff7b72; --bad-bg: #44201e;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1060px; margin: 0 auto; padding: 32px 16px 72px; }
+h1 { font-size: 28px; margin: 0 0 6px; }
+h2 { font-size: 20px; margin: 46px 0 4px; }
+h3 { font-size: 15px; margin: 0 0 4px; }
+p.lead { color: var(--ink2); margin: 0 0 8px; max-width: 780px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-top: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 14px; }
+.grid .card { margin: 0; }
+svg { width: 100%; height: auto; display: block; }
+svg text { font-family: inherit; fill: var(--ink); }
+.small { font-size: 12.5px; fill: var(--ink2); }
+.b { font-weight: 700; }
+pre { background: var(--code); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font: 12.5px/1.55 ui-monospace, Consolas, monospace; margin: 8px 0 0; }
+code { background: var(--code); padding: 1px 6px; border-radius: 5px; font: 12.5px ui-monospace, Consolas, monospace; }
+.callout { border-left: 4px solid var(--srv); background: var(--srv-bg); padding: 12px 14px; border-radius: 8px; margin-top: 14px; }
+.callout.warn { border-color: var(--cli); background: var(--cli-bg); }
+.pill { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 9px; border-radius: 999px; }
+.p-host { background: var(--host-bg); color: var(--host); } .p-cli { background: var(--cli-bg); color: var(--cli); }
+.p-srv { background: var(--srv-bg); color: var(--srv); } .p-mod { background: var(--mod-bg); color: var(--mod); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--ink2); font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; }
+ul { margin: 6px 0 0; padding-left: 20px; } li { margin: 3px 0; }
+.toc a { color: var(--host); text-decoration: none; margin-right: 14px; font-size: 13.5px; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>MCP sunucusu nasıl çalışır?</h1>
+<p class="lead">MCP (Model Context Protocol), bir yapay zekâ uygulamasının dışarıdaki programlarla standart bir dilde konuşmasını sağlayan açık bir protokoldür. Bu sayfa önce protokolün kendisini, sonra FS-SC'nin onu nasıl kullandığını anlatır.</p>
+<p class="toc"><a href="#n1">1 · Kim kimdir</a><a href="#n2">2 · Taşıma</a><a href="#n3">3 · Yaşam döngüsü</a><a href="#n4">4 · Üç yetenek</a><a href="#n5">5 · Araç çağrısı</a><a href="#n6">6 · Mesajlar</a><a href="#n7">7 · FS-SC'de</a><a href="#n8">8 · Tuzaklar</a></p>
+
+<h2 id="n1">1. Kim kimdir?</h2>
+<p class="lead">Üç oyuncu vardır. Model sunucuyla <b>doğrudan konuşmaz</b>: arada, modeli çalıştıran uygulama durur.</p>
+<div class="card">
+<svg viewBox="0 0 1000 250" role="img" aria-label="Host, MCP istemcisi, MCP sunucusu ve model">
+  <defs><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+  <rect x="10" y="20" width="560" height="210" rx="18" fill="var(--host-bg)" stroke="var(--host)" stroke-width="2"/>
+  <text x="30" y="48" class="b" font-size="15" style="fill:var(--host)">HOST (yapay zekâ uygulaması)</text>
+  <text x="30" y="68" class="small">Claude Code · Claude Desktop · Antigravity</text>
+  <rect x="30" y="92" width="200" height="110" rx="12" fill="var(--panel)" stroke="var(--mod)" stroke-width="2"/>
+  <text x="130" y="122" text-anchor="middle" class="b" font-size="15">Model</text>
+  <text x="130" y="144" text-anchor="middle" class="small">metin üretir; "şu aracı çağır"</text>
+  <text x="130" y="162" text-anchor="middle" class="small">kararını verir</text>
+  <rect x="340" y="92" width="210" height="110" rx="12" fill="var(--panel)" stroke="var(--cli)" stroke-width="2"/>
+  <text x="445" y="122" text-anchor="middle" class="b" font-size="15">MCP istemcisi</text>
+  <text x="445" y="144" text-anchor="middle" class="small">her sunucu için bir bağlantı</text>
+  <text x="445" y="162" text-anchor="middle" class="small">araçları listeler, çağırır</text>
+  <line x1="232" y1="147" x2="338" y2="147" stroke="var(--ink2)" stroke-width="2" marker-start="url(#m1)" marker-end="url(#m1)"/>
+  <rect x="740" y="60" width="250" height="140" rx="18" fill="var(--srv-bg)" stroke="var(--srv)" stroke-width="2"/>
+  <text x="865" y="92" text-anchor="middle" class="b" font-size="15" style="fill:var(--srv)">MCP SUNUCUSU</text>
+  <text x="865" y="116" text-anchor="middle" class="small">sizin yazdığınız program</text>
+  <text x="865" y="142" text-anchor="middle" font-size="13">araçlar · kaynaklar · istemler</text>
+  <text x="865" y="168" text-anchor="middle" class="small">örn. FS-SC (fssc-visual-observer)</text>
+  <line x1="552" y1="147" x2="738" y2="147" stroke="var(--ink2)" stroke-width="2.5" marker-start="url(#m1)" marker-end="url(#m1)"/>
+  <text x="645" y="136" text-anchor="middle" class="small b">JSON-RPC 2.0</text>
+</svg>
+</div>
+<div class="grid">
+  <div class="card"><h3><span class="pill p-host">Host</span></h3>Kullanıcının açtığı uygulama. Model API'sini çağırır, sunucuları ekler/başlatır, izinleri yönetir.</div>
+  <div class="card"><h3><span class="pill p-cli">İstemci</span></h3>Host'un içindeki bağlantı parçası. Bir sunucuyla bire bir konuşur; araç listesini ve sonuçları taşır.</div>
+  <div class="card"><h3><span class="pill p-srv">Sunucu</span></h3>Yetenek sunan program. Model hakkında bir şey bilmez; yalnızca gelen istekleri cevaplar.</div>
+</div>
+
+<h2 id="n2">2. Konuşma nasıl taşınır?</h2>
+<p class="lead">Mesajların biçimi hep aynıdır (JSON-RPC 2.0); değişen yalnızca taşıyıcı kanaldır.</p>
+<div class="grid">
+  <div class="card">
+    <h3>stdio (yerel)</h3>
+    Host sunucuyu <b>alt süreç</b> olarak başlatır. İstekler sunucunun <code>stdin</code>'ine, cevaplar <code>stdout</code>'una satır satır JSON olarak gider. Hata ve günlükler <code>stderr</code>'e yazılır.
+    <ul><li>Kurulum: bir komut ve argümanlar (<code>python -m server.main --mode stdio</code>)</li><li>Host kapanınca süreç de kapanır</li><li>FS-SC'nin kullandığı yol budur</li></ul>
+  </div>
+  <div class="card">
+    <h3>HTTP (uzak)</h3>
+    Sunucu ayrı çalışır ve bir adreste dinler; istemci HTTP ile bağlanır (Streamable HTTP; eski biçim SSE). Birden çok istemci aynı sunucuya bağlanabilir.
+    <ul><li>Kurulum: bir adres (URL) ve gerekirse kimlik doğrulama</li><li>Sunucu host'tan bağımsız yaşar</li></ul>
+  </div>
+</div>
+
+<h2 id="n3">3. Bir bağlantının yaşam döngüsü</h2>
+<p class="lead">Önce el sıkışma, sonra iş, en sonda kapanış. El sıkışmada iki taraf birbirine neleri desteklediğini söyler.</p>
+<div class="card">
+<svg viewBox="0 0 1000 400" role="img" aria-label="MCP yaşam döngüsü">
+  <defs><marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+  <rect x="60" y="14" width="170" height="40" rx="10" fill="var(--cli-bg)" stroke="var(--cli)" stroke-width="2"/><text x="145" y="40" text-anchor="middle" class="b">İstemci</text>
+  <rect x="770" y="14" width="170" height="40" rx="10" fill="var(--srv-bg)" stroke="var(--srv)" stroke-width="2"/><text x="855" y="40" text-anchor="middle" class="b">Sunucu</text>
+  <line x1="145" y1="54" x2="145" y2="390" stroke="var(--line)" stroke-width="2" stroke-dasharray="6 5"/>
+  <line x1="855" y1="54" x2="855" y2="390" stroke="var(--line)" stroke-width="2" stroke-dasharray="6 5"/>
+  <g stroke="var(--ink2)" stroke-width="2" marker-end="url(#m2)">
+    <line x1="148" y1="92" x2="850" y2="92"/>
+    <line x1="852" y1="132" x2="150" y2="132"/>
+    <line x1="148" y1="172" x2="850" y2="172" stroke-dasharray="5 4"/>
+    <line x1="148" y1="226" x2="850" y2="226"/>
+    <line x1="852" y1="262" x2="150" y2="262"/>
+    <line x1="148" y1="312" x2="850" y2="312"/>
+    <line x1="852" y1="348" x2="150" y2="348"/>
+  </g>
+  <g text-anchor="middle" font-size="13">
+    <text x="500" y="84" class="b">initialize</text><text x="500" y="110" class="small">protokol sürümü, istemci yetenekleri, clientInfo</text>
+    <text x="500" y="124" class="b">sonuç</text><text x="500" y="150" class="small">sunucu yetenekleri (tools, resources…), serverInfo</text>
+    <text x="500" y="164" class="b">notifications/initialized</text><text x="500" y="188" class="small">"hazırım" bildirimi (cevap beklemez)</text>
+    <text x="500" y="218" class="b">tools/list</text><text x="500" y="242" class="small">"hangi araçların var?"</text>
+    <text x="500" y="254" class="b">araç tanımları</text><text x="500" y="278" class="small">ad · açıklama · giriş şeması (JSON Schema)</text>
+    <text x="500" y="304" class="b">tools/call</text><text x="500" y="328" class="small">ad + argümanlar → çalıştır</text>
+    <text x="500" y="340" class="b">sonuç</text><text x="500" y="364" class="small">content + isError</text>
+  </g>
+  <text x="26" y="92" class="small b">1</text><text x="26" y="226" class="small b">2</text><text x="26" y="312" class="small b">3</text>
+  <text x="26" y="110" class="small">el sıkışma</text><text x="26" y="244" class="small">keşif</text><text x="26" y="330" class="small">kullanım</text>
+</svg>
+</div>
+<div class="callout">İstek ile bildirim farkı: <b>istek</b> bir <code>id</code> taşır ve cevap bekler; <b>bildirim</b> <code>id</code> taşımaz, cevap gelmez. Bu yüzden "hazırım" bildirimi ayrıdır.</div>
+
+<h2 id="n4">4. Sunucunun sunabildiği üç şey</h2>
+<p class="lead">Her biri "kim kontrol eder" sorusuyla ayrılır.</p>
+<div class="grid">
+  <div class="card"><h3><span class="pill p-srv">Araçlar (tools)</span></h3>İş yapan fonksiyonlar. <b>Modelin</b> kararıyla çağrılır. Girişi bir JSON Schema ile tanımlanır, çıktısı metin/görüntü olabilir. FS-SC'nin neredeyse tüm gücü buradadır.<pre>get_next_step(run_id)
+submit_step_result(run_id, order, result_json)</pre></div>
+  <div class="card"><h3><span class="pill p-mod">Kaynaklar (resources)</span></h3>URI ile okunan salt-okunur veriler (dosya, kayıt, belge). <b>Uygulamanın</b> kararıyla bağlama eklenir.<pre>file:///proje/README.md
+db://musteriler/42</pre></div>
+  <div class="card"><h3><span class="pill p-host">İstemler (prompts)</span></h3>Hazır şablon konuşmalar. <b>Kullanıcı</b> seçer (örn. bir eğik çizgi komutu gibi). FS-SC'de <code>run_software_company</code> bir istemdir.</div>
+</div>
+<div class="callout warn"><b>Tersi de var:</b> istemci de sunucuya yetenek açabilir: sampling (sunucu modelden metin ister), roots (hangi klasörlerde çalışılır), elicitation (kullanıcıya soru). FS-SC bunları kullanmaz; model çağırmak yerine üretimi istemcinin kendisine bırakır.</div>
+
+<h2 id="n5">5. Bir araç çağrısı baştan sona</h2>
+<p class="lead">Kullanıcı bir şey ister; model bir aracı çağırmaya karar verir; host çağrıyı sunucuya iletir; sonuç modelin önüne döner.</p>
+<div class="card">
+<svg viewBox="0 0 1000 330" role="img" aria-label="Araç çağrısı akışı">
+  <defs><marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--ink2)"/></marker></defs>
+  <g font-size="13" text-anchor="middle">
+    <rect x="10" y="30" width="150" height="76" rx="12" fill="var(--host-bg)" stroke="var(--host)" stroke-width="2"/><text x="85" y="62" class="b">1 · Kullanıcı</text><text x="85" y="82" class="small">"pipeline'ı çalıştır"</text>
+    <rect x="200" y="30" width="190" height="76" rx="12" fill="var(--mod-bg)" stroke="var(--mod)" stroke-width="2"/><text x="295" y="58" class="b">2 · Model düşünür</text><text x="295" y="78" class="small">araç tanımlarını görmüştür:</text><text x="295" y="94" class="small">start_pipeline_run uygun</text>
+    <rect x="430" y="30" width="180" height="76" rx="12" fill="var(--cli-bg)" stroke="var(--cli)" stroke-width="2"/><text x="520" y="58" class="b">3 · Host / istemci</text><text x="520" y="78" class="small">tools/call gönderir</text><text x="520" y="94" class="small">(izin gerekirse sorar)</text>
+    <rect x="650" y="30" width="170" height="76" rx="12" fill="var(--srv-bg)" stroke="var(--srv)" stroke-width="2"/><text x="735" y="58" class="b">4 · Sunucu</text><text x="735" y="78" class="small">fonksiyonu çalıştırır</text><text x="735" y="94" class="small">durumu günceller</text>
+    <rect x="850" y="30" width="140" height="76" rx="12" fill="var(--cli-bg)" stroke="var(--cli)" stroke-width="2"/><text x="920" y="58" class="b">5 · Sonuç</text><text x="920" y="78" class="small">content metni</text><text x="920" y="94" class="small">istemciye döner</text>
+    <rect x="200" y="200" width="190" height="76" rx="12" fill="var(--mod-bg)" stroke="var(--mod)" stroke-width="2"/><text x="295" y="228" class="b">6 · Model okur</text><text x="295" y="248" class="small">sonucu bağlama ekler,</text><text x="295" y="264" class="small">sıradaki adıma karar verir</text>
+    <rect x="520" y="200" width="300" height="76" rx="12" fill="var(--panel)" stroke="var(--line)" stroke-width="2"/><text x="670" y="228" class="b">7 · Döngü</text><text x="670" y="248" class="small">başka araç çağırır ya da kullanıcıya</text><text x="670" y="264" class="small">cevap yazar</text>
+  </g>
+  <g stroke="var(--ink2)" stroke-width="2" fill="none" marker-end="url(#m3)">
+    <path d="M160 68H198"/><path d="M390 68H428"/><path d="M610 68H648"/><path d="M820 68H848"/>
+    <path d="M920 108V160Q920 176 900 176H310Q295 176 295 198"/>
+    <path d="M392 238H518"/>
+  </g>
+</svg>
+</div>
+
+<h2 id="n6">6. Gerçek mesajlar</h2>
+<p class="lead">Aşağıdakiler FS-SC'nin gerçek bir adımındaki konuşmanın sadeleştirilmiş hâlidir.</p>
+<div class="grid">
+  <div class="card"><h3>El sıkışma</h3><pre>→ {"jsonrpc":"2.0","id":1,"method":"initialize",
+   "params":{"protocolVersion":"2025-06-18",
+   "clientInfo":{"name":"claude-code","version":"2.1.308"},
+   "capabilities":{}}}
+← {"jsonrpc":"2.0","id":1,"result":{
+   "serverInfo":{"name":"fssc-visual-observer"},
+   "capabilities":{"tools":{},"prompts":{}}}}
+→ {"jsonrpc":"2.0","method":"notifications/initialized"}</pre></div>
+  <div class="card"><h3>Araç çağrısı</h3><pre>→ {"jsonrpc":"2.0","id":7,"method":"tools/call",
+   "params":{"name":"get_next_step",
+   "arguments":{"run_id":"run-26525238e9"}}}
+← {"jsonrpc":"2.0","id":7,"result":{
+   "content":[{"type":"text",
+     "text":"{\"status\":\"STEP\",\"order\":447,…}"}],
+   "isError":false}}</pre></div>
+</div>
+<div class="card"><h3>Araç tanımı (sunucunun <code>tools/list</code> cevabı)</h3><pre>{"name":"submit_step_result",
+ "description":"Adımın çıktısını (yalnızca zarf) gönderir…",
+ "inputSchema":{"type":"object",
+   "properties":{"run_id":{"type":"string"},"order":{"type":"integer"},"result_json":{"type":"string"}},
+   "required":["run_id","order","result_json"]}}</pre>
+Modelin gördüğü şey bu tanımdır: ad, açıklama ve giriş şeması. Açıklama ne kadar net olursa model aracı o kadar doğru kullanır.</div>
+
+<h2 id="n7">7. FS-SC bu mekanizmayı nasıl kullanıyor?</h2>
+<div class="card" style="padding:6px 12px">
+<table>
+  <tr><th>Protokol parçası</th><th>FS-SC'de karşılığı</th></tr>
+  <tr><td>Sunucu uygulaması</td><td><code>server/main.py</code>: resmî MCP Python SDK'sı (<code>MCPServer</code>, 2.x). Her araç bir <code>@mcp.tool</code> fonksiyonu, girişleri pydantic ile doğrulanır. 27 araç.</td></tr>
+  <tr><td>Taşıma</td><td>stdio. Host sunucuyu <code>python -m server.main --mode stdio</code> ile başlatır. Kayıt: Claude Code için <code>.mcp.json</code>, Claude Desktop için yapılandırma dosyası, Antigravity için <code>.agents/mcp_config.json</code>.</td></tr>
+  <tr><td>Tek durum, iki süreç</td><td>Koşu durumu bir <b>web sürecinde</b> yaşar (port 8099: pano, REST, WebSocket). stdio süreci o sürece <b>proxy</b> olur. Böylece istemci kapansa da koşu ve pano ayakta kalır.</td></tr>
+  <tr><td>Araçlar</td><td>Koşu: <code>start_pipeline_run</code>, <code>get_next_step</code>, <code>submit_step_result</code>, <code>wait_for_approval</code>. Yardımcı: <code>report_thinking</code>, <code>get_acceptance_criteria</code>, <code>list_questions</code>… Tamamı sunucunun durum makinesine açılan kapılar.</td></tr>
+  <tr><td>İstem</td><td><code>run_software_company</code> istemi koşuyu başlatan hazır konuşmadır.</td></tr>
+  <tr><td>Model</td><td>Sunucu modeli çağırmaz (sampling yok). Üretimi host'un modeli yapar; sunucu çıktıyı denetler.</td></tr>
+</table>
+</div>
+<h3 style="margin-top:22px">Neden "çekme modeli"?</h3>
+<div class="grid">
+  <div class="card">MCP sunucusu <b>kendiliğinden modele iş veremez</b>: yalnızca gelen çağrıya cevap verir. İşi başlatan hep model/istemci taraftır.</div>
+  <div class="card">Bu yüzden FS-SC her cevabın sonuna "hemen <code>get_next_step</code> çağır" yazar ve talimat dosyalarında döngüyü tarif eder. İstemci çağırdıkça iş ilerler.</div>
+  <div class="card">Avantajı: istemci kapansa da durum sunucuda kalır; yeniden bağlanan istemci aynı adımı alır ve kaldığı yerden sürer.</div>
+</div>
+
+<h2 id="n8">8. Pratikte karşılaşılan tuzaklar</h2>
+<div class="card" style="padding:6px 12px">
+<table>
+  <tr><th>Durum</th><th>Neden olur</th><th>FS-SC'de çözümü</th></tr>
+  <tr><td>Çok büyük araç sonucu</td><td>Sonuç bağlama sığmaz; host kırpar ya da dosyaya yazar</td><td>Adım içeriği özetlenir; ağır işlerde REST ile teslim edilebilir</td></tr>
+  <tr><td>Uzun bekleme</td><td>Araç çağrıları zaman aşımına uğrar</td><td><code>wait_for_approval</code> en çok 45 sn bekler, istemci tekrar çağırır</td></tr>
+  <tr><td>Sunucu yeniden başlar</td><td>Bellekteki bağlantı ve etkin koşu kopar</td><td>Koşu "terk edildi" olur; <code>start_pipeline_run</code> aynı koşuyu sürdürür</td></tr>
+  <tr><td>Araçlar görünmüyor</td><td>Host sunucuyu başlatamadı ya da eski bağlantı</td><td>İstemciyi yeniden başlat; yapılandırma dosyasındaki yol ve port'u kontrol et</td></tr>
+  <tr><td>Model aracı hiç çağırmıyor</td><td>Açıklama belirsiz ya da araç sayısı çok fazla</td><td>Araç açıklamaları ve proje talimat dosyası (CLAUDE.md / GEMINI.md) döngüyü açıkça yazar</td></tr>
+  <tr><td>Güvenlik</td><td>Sunucu bilgisayarında komut çalıştırabilir</td><td>Yalnızca yerel adres, komut listesi, sır taraması; kütüphane onayı panodan</td></tr>
+</table>
+</div>
+
+<p class="lead" style="margin-top:34px">Bu sayfa <code>docs/mcp-nasil-calisir.html</code> dosyasıdır. FS-SC'nin kendi akışı için <code>docs/is-akisi.html</code> sayfasına bak.</p>
+</div>
+</body>
+</html>
